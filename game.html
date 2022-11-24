@@ -89,6 +89,7 @@
           arr = name.split('&');
           var highscore = arr[1];
           name = arr[0].substring(1);
+          roomname = arr[2];
           var messages = document.getElementById('message');
           var form = document.getElementById('chat-form');
           var input = document.getElementById('msg');
@@ -108,7 +109,12 @@
           // console.log(j);
           // sleep(100);}}
           socket.emit('user',name);
+          if(arr[2]=== undefined){
           socket.emit("Join lobby" , name);
+        }
+          else{
+            socket.emit("Join private lobby",arr[2],name);
+          }
           socket.on('for_users _in_lobby' , function(lastroomnames,room_id){
             room_id_=room_id
             players.innerHTML="";
@@ -134,22 +140,28 @@
           });
   
           socket.on('new_round' , function(lastroomnames,room_id,last_client_ids,current_turn,word ){
-            time=100;
-            document.getElementById('round').innerHTML='show';
-            document.getElementById('round').innerHTML="ROUND "+round_number+"BEGIN";
-            setTimeout(empty_,1000);
-            function empty_(){}
-            round_number++;
+            time=10;
+            document.getElementById('round').className='show';
+            document.getElementById('round').innerHTML="ROUND "+round_number+" BEGIN";
+            let p=1;
+            var delay=setInterval(pause,1000);
+            function pause(){
+              console.log(p);
+              p=p-1;
+              if(p<1){
+                
+                round_number++;
             document.getElementById('round').className='hide';
             if(socket.id === current_turn) {
              
               myturn=true;
-              var time_=100;
+              var time_=10;
               let j=0;
-              var myinterval=setInterval(timer,1000)
+              var myinterval=setInterval(timer,900)
               function timer(){
                 if(time===1){
                   clearInterval(myinterval);
+                  socket.emit('send_score',lastroomnames)
                   socket.emit('next_turn',room_id,last_client_ids,current_turn);
                 }
                 time=time_-j;
@@ -161,17 +173,32 @@
   
             }
             else myturn=false;
-            
-          });
+            clearInterval(delay);
+          }}});
   
           socket.on('time_update',function(time_,room_id){
             time=time_;
             
             document.getElementById('time').innerHTML="TIME LEFT:"+time;
-          })
+            
+          });
+  
+          socket.on('time_update',function(time_,room_id){
+            time=time_;
+            // console.log(time);
+            document.getElementById('time').innerHTML="TIME LEFT:"+time;
+              })
+        
   
   
-  
+          // socket.on('new_round',current_turn=>{
+          //   document.getElementById('round').innerHTML='show';
+          //   document.getElementById('round').innerHTML="ROUND "+round_number+"BEGIN";
+          //   round_number++;
+          //   document.getElementById('round').className='hide';
+          //   if(socket.id === current_turn) myturn=true;
+          //   else myturn=false;
+          // });
   
   
           socket.on('drawing option',function(word,current_turn){
@@ -192,7 +219,7 @@
             if (input1.value) {
               if(ans_== input1.value){
                 round_score = time;
-                score+=round_score;
+                score=score+round_score;
                 socket.emit('round_score',round_score);
                 alert("You guessed the word !!");
                 document.getElementById('score').innerHTML="SCORE:"+score;
