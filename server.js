@@ -128,7 +128,7 @@ io.on("connection" ,socket =>{
           socket.join(roomname);
       } else{
           if( Clients[roomname].length === 6 ){
-            
+            io.to(socket.id).emit('private lobby full',socket.id);
           }
           else{
             socket.join(roomname);
@@ -146,6 +146,11 @@ io.on("connection" ,socket =>{
         
         
     }
+
+    socket.on('got the answer',function(room_id_,name){
+      var msg =name + "guessed correctly";
+      io.to(room_id_).emit('chat message', msg,'server',room_id_);
+    });
 
     socket.on('send_answer',function(room_id,name,word){
       let msg='Correct answer is :' + word;
@@ -268,6 +273,11 @@ io.on("connection" ,socket =>{
     
     });
 
+    socket.on('send_answer',function(room_id,name,word){
+      let msg='Correct answer is :' + word;
+      io.to(room_id).emit('chat message', msg,name,room_id) 
+    })
+
     socket.on('last_round',function(lastroomnames_,room_id,last_client_ids_,current_turn){
       io.to(room_id).emit('send_scores',lastroomnames_,room_id,last_client_ids_,current_turn);
     });
@@ -293,13 +303,16 @@ io.on("connection" ,socket =>{
           }
           io.to(room_id).emit('final_scores',lastroomnames_,room_id,last_client_ids_,scores)
         }else{
-         
           final_names[room_id].push(name);
           final_scores[room_id].push(score);
         }
       }
     })
 
+    socket.on('got the answer',function(room_id_,name){
+      var msg =name + " guessed correctly";
+      io.to(room_id_).emit('chat message', msg,'server',room_id_);
+    });
 
     socket.on('time_update',  function(time,room_id){
       
