@@ -142,46 +142,15 @@ io.on("connection" ,socket =>{
         io.to(roomname).emit('lobby_full' ,names[roomname],roomname);
         var word = dict.randum();
         io.to(roomname).emit('drawing option',word,Clients[roomname][0]);
-        io.to(roomname).emit('new_round' , lastroomnames,roomname,Clients[roomname],Clients[roomname][0],word);
+        io.to(roomname).emit('new_round' , names[roomname],roomname,Clients[roomname],Clients[roomname][0],word);
         
         
     }
 
-    // socket.on("Join lobby" , name=>{
-      //     if( room_ids.length === 0){
-      //         room_ids.push("room");
-      //         socket.join(room_ids[0]);
-      //         lastroomsize=1;
-      //         last_client_ids.push(socket.id);
-      //         lastroomnames.push(name);
-      //     } else{
-      //         if( lastroomsize === 6 ){
-      //             let roomno = room_ids.length;
-      //             room_ids.push("room" + roomno.toString());
-      //             socket.join("room" + roomno.toString());
-      //             lastroomsize=1;
-      //             lastroomnames=[];
-      //             last_client_ids=[];
-      //             last_client_ids.push(socket.id);
-      //             lastroomnames.push(name);
-                  
-      //         }
-      //         else{
-      //           socket.join(room_ids[room_ids.length-1]);
-      //           lastroomsize= lastroomsize + 1;
-      //           lastroomnames.push(name);
-      //           last_client_ids.push(socket.id);
-      //           console.log(name);
-      //       }
-      //   }
-      //   let room_id=room_ids[room_ids.length-1]
-      //   io.to(room_id).emit('for_users _in_lobby' , lastroomnames,room_id)
-      //   if(lastroomsize === 6){
-      //       io.to(room_id).emit('lobby_full' , lastroomnames,room_id);
-      //       var word = dict.randum();
-      //       io.to(room_id).emit('drawing option',word,last_client_ids[0]);
-      //       io.to(room_id).emit('new_round' , lastroomnames,room_id,last_client_ids,last_client_ids[0],word);
-            
+    socket.on('send_answer',function(room_id,name,word){
+      let msg='Correct answer is :' + word;
+      io.to(room_id).emit('chat message', msg,name,room_id) 
+    })
 
     socket.on('next_turn', function(lastroomnames,room_id,last_client_ids,current_turn,word){
       
@@ -202,9 +171,41 @@ io.on("connection" ,socket =>{
       
       
     });
-    // socket.on('server_drawing option',function(room_id,ord,current_turn){
-    //   io.to(room_id).emit('drawing option',room_id,word,current_turn);
-    // });
+    socket.on('last_round',function(lastroomnames_,room_id,last_client_ids_,current_turn){
+      io.to(room_id).emit('send_scores',lastroomnames_,room_id,last_client_ids_,current_turn);
+    });
+
+    socket.on('my_score',function(lastroomnames_,room_id,last_client_ids_,score,name){
+      
+      if(final_scores[room_id]===undefined){
+        final_scores[room_id]=[];
+        final_names[room_id]=[];
+        final_names[room_id].push(name);
+        final_scores[room_id].push(score);
+
+      }
+      else{
+        if(final_names[room_id].length===5){
+          console.log('heqkwjfnvakn,')
+ 
+          final_names[room_id].push(name);
+          final_scores[room_id].push(score);
+          let scores={};
+          for(let i=0 ; i<6 ; i++){
+            
+           
+            scores[final_names[room_id][i]]=final_scores[room_id][i];
+            
+          }
+          io.to(room_id).emit('final_scores',lastroomnames_,room_id,last_client_ids_,scores)
+        }else{
+         
+          final_names[room_id].push(name);
+          final_scores[room_id].push(score);
+        }
+      }
+    })
+
     socket.on('time_update',  function(time,room_id){
       
       socket.to(room_id).emit('time_update',time,room_id);
@@ -244,20 +245,7 @@ io.on("connection" ,socket =>{
         var word = dict.randum();
         io.to(room_id).emit('drawing option',word,last_client_ids[0]);
         io.to(room_id).emit('new_round' , lastroomnames,room_id,last_client_ids,last_client_ids[0],word);
-        
-        // function game(){
-
-        //   for(let j=0;j<time;j++){
-        //   io.to(room_id).emit('time',time-j);
-        //   console.log(j);
-        //   sleep(100);}}
-        // for(let i=0;i<6;i++){
-        //   var time=10;
-        //   let current_turn=last_client_ids[i];       
-        //   io.to(room_id).emit('drawing option',word,current_turn);
-        //   game();
-        //   console.log('end');
-        // }         
+      
     }
 
     socket.on('next_turn', function(lastroomnames_,room_id,last_client_ids_,current_turn,word_){
@@ -285,21 +273,27 @@ io.on("connection" ,socket =>{
     });
 
     socket.on('my_score',function(lastroomnames_,room_id,last_client_ids_,score,name){
+      
       if(final_scores[room_id]===undefined){
         final_scores[room_id]=[];
         final_names[room_id]=[];
-        final_names.push(name);
-        final_scores.push(score);
+        final_names[room_id].push(name);
+        final_scores[room_id].push(score);
 
       }
       else{
-        if(final_names[room_id].length===6){
+        if(final_names[room_id].length===5){
+          console.log('heqkwjfnvakn,')
+          final_names[room_id].push(name);
+          final_scores[room_id].push(score);
           let scores={};
           for(let i=0 ; i<6 ; i++){
             scores[final_names[room_id][i]]=final_scores[room_id][i];
+            
           }
           io.to(room_id).emit('final_scores',lastroomnames_,room_id,last_client_ids_,scores)
         }else{
+         
           final_names[room_id].push(name);
           final_scores[room_id].push(score);
         }
