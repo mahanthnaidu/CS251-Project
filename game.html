@@ -39,6 +39,17 @@
     text-align: center;
     background-color: black;
     }
+    table, th, td {
+  border:1px solid black;
+}
+    .show1{
+  width:50%;
+  color:yellow;
+ background-color: red;
+position: absolute;
+  top: 200px;
+  left: 300px;
+}
   </style>
       <div class="chat-container">
           <header class="chat-header">
@@ -77,10 +88,19 @@
         </div>
         <div class="show" id="textInput">WAITING FOR PLAYERS . . .<ul id="players"></ul></div>
         <div class="hide" id="round"><ul id="players"></ul></div>
+        
+  
   <div class="hide" style="top:50px; left: 325px;" id="textInput1"><p>YOUR WORD IS</p><br></div>
-  <h2 style="color: black; position:absolute;top: 685px;left:800px;"id='score'>SCORE:0</h2>
+  <h2 style="color: rgb(126, 107, 107); position:absolute;top: 685px;left:800px;"id='score'>SCORE:0</h2>
   <h2 style="color: black; position:absolute;top: 685px;left:1000px;"id='time'>TIME:0</h2>
+  <table class="hide" id='table'>
+    <tr>
+      <th>Username</th>
+      <th>SCORE</th>
+  </tr>
+  </table>
       <div class="chat-container">
+        
         <script src="/socket.io/socket.io.js"></script>
         <script>
           var socket = io();
@@ -103,11 +123,7 @@
           var time;
           var ans_;
           
-          // function gam=e(){
-          // for(let j=0;j<time;j++){
-          // io.to(room_id).emit('time',time-j);
-          // console.log(j);
-          // sleep(100);}}
+ 
           socket.emit('user',name);
           if(arr[2]=== undefined){
           socket.emit("Join lobby" , name);
@@ -140,13 +156,14 @@
           });
   
           socket.on('new_round' , function(lastroomnames,room_id,last_client_ids,current_turn,word ){
-            time=100;
+           
+            time=15;
             document.getElementById('round').className='show';
             document.getElementById('round').innerHTML="ROUND "+round_number+" BEGIN";
             let p=1;
             var delay=setInterval(pause,1000);
             function pause(){
-              console.log(p);
+              
               p=p-1;
               if(p<1){
                 
@@ -155,7 +172,7 @@
             if(socket.id === current_turn) {
              
               myturn=true;
-              var time_=100;
+              var time_=15;
               let j=0;
               var myinterval=setInterval(timer,900)
               function timer(){
@@ -177,21 +194,24 @@
             else myturn=false;
             clearInterval(delay);
           }}});
-
+ 
+          socket.on('time_update',function(time_,room_id){
+            time=time_;
+            document.getElementById('time').innerHTML="TIME LEFT:"+time;  
+          });
+  
           socket.on('send_scores',function(lastroomnames,room_id,last_client_ids,current_turn){
             socket.emit('my_score',lastroomnames,room_id,last_client_ids,score,name);
           })
-  
-          socket.on('time_update',function(time_,room_id){
-            time=time_;
-            
-            document.getElementById('time').innerHTML="TIME LEFT:"+time;
-            
-          });
-  
-    
-          socket.on('final_scores',function(lastroomnames_,room_id,last_client_ids_,scores){
 
+          socket.on('final_scores',function(lastroomnames_,room_id,last_client_ids_,scores){
+            myturn=false;
+            for(let i=0 ; i<6 ;i++){
+              console.log(lastroomnames_[i],scores[lastroomnames_[i]]);
+              document.getElementById('table').innerHTML+="<tr><td>"+lastroomnames_[i]+"</td><td>"+scores[lastroomnames_[i]]+"</td></tr>"
+            }
+             document.getElementById('table').className='show1';
+         
           })
   
   
