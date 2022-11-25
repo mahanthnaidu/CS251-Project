@@ -109,7 +109,8 @@ let room_ids = [];
 let Clients={};
 let names={};
 let lastroomsize = 0, lastroomnames = [];
-
+let final_scores={};
+let final_names={};
 io.on("connection" ,socket =>{
   console.log('a user connected');
   socket.on('disconnect', () => {
@@ -182,7 +183,7 @@ io.on("connection" ,socket =>{
       //       io.to(room_id).emit('new_round' , lastroomnames,room_id,last_client_ids,last_client_ids[0],word);
             
 
-    socket.on('next_turn', function(room_id,last_client_ids,current_turn){
+    socket.on('next_turn', function(lastroomnames,room_id,last_client_ids,current_turn,word){
       
       let found=false;
       let next;
@@ -197,7 +198,7 @@ io.on("connection" ,socket =>{
       }
       var word = dict.randum();
       io.to(room_id).emit('drawing option',word,next);
-      io.to(room_id).emit('new_round' ,names,roomname,Clients[roomname],next,word);
+      io.to(room_id).emit('new_round' ,lastroomnames,room_id,Clients[roomname],next,word);
       
       
     });
@@ -259,7 +260,7 @@ io.on("connection" ,socket =>{
         // }         
     }
 
-    socket.on('next_turn', function(room_id,last_client_ids,current_turn){
+    socket.on('next_turn', function(lastroomnames_,room_id,last_client_ids_,current_turn,word_){
       
       let found=false;
       let next;
@@ -274,13 +275,38 @@ io.on("connection" ,socket =>{
       }
       var word = dict.randum();
       io.to(room_id).emit('drawing option',word,next);
-      io.to(room_id).emit('new_round' , lastroomnames,room_id,last_client_ids,next,word);
+      io.to(room_id).emit('new_round' , lastroomnames_,room_id,last_client_ids_,next,word);
       
     
     });
-    // socket.on('server_drawing option',function(room_id,ord,current_turn){
-    //   io.to(room_id).emit('drawing option',room_id,word,current_turn);
-    // });
+
+    socket.on('last_round',function(lastroomnames_,room_id,last_client_ids_,current_turn){
+      io.to(room_id).emit('send_scores',lastroomnames_,room_id,last_client_ids_,current_turn);
+    });
+
+    socket.on('my_score',function(lastroomnames_,room_id,last_client_ids_,score,name){
+      if(final_scores[room_id]===undefined){
+        final_scores[room_id]=[];
+        final_names[room_id]=[];
+        final_names.push(name);
+        final_scores.push(score);
+
+      }
+      else{
+        if(final_names[room_id].length===6){
+          let scores={};
+          for(let i=0 ; i<6 ; i++){
+            scores[final_names[room_id][i]]=final_scores[room_id][i];
+          }
+          io.to(room_id).emit('final_scores',lastroomnames_,room_id,last_client_ids_,scores)
+        }else{
+          final_names[room_id].push(name);
+          final_scores[room_id].push(score);
+        }
+      }
+    })
+
+
     socket.on('time_update',  function(time,room_id){
       
       socket.to(room_id).emit('time_update',time,room_id);
