@@ -140,7 +140,7 @@
           });
   
           socket.on('new_round' , function(lastroomnames,room_id,last_client_ids,current_turn,word ){
-            time=10;
+            time=100;
             document.getElementById('round').className='show';
             document.getElementById('round').innerHTML="ROUND "+round_number+" BEGIN";
             let p=1;
@@ -155,14 +155,16 @@
             if(socket.id === current_turn) {
              
               myturn=true;
-              var time_=10;
+              var time_=100;
               let j=0;
               var myinterval=setInterval(timer,900)
               function timer(){
                 if(time===1){
                   clearInterval(myinterval);
-                  socket.emit('send_score',lastroomnames)
-                  socket.emit('next_turn',room_id,last_client_ids,current_turn);
+                  if(last_client_ids[5]===current_turn){
+                    socket.emit('last_round',lastroomnames,room_id,last_client_ids,current_turn);
+                  }
+                  else socket.emit('next_turn',lastroomnames,room_id,last_client_ids,current_turn,word);
                 }
                 time=time_-j;
                 document.getElementById('time').innerHTML="TIME LEFT:"+time;
@@ -176,7 +178,9 @@
             clearInterval(delay);
           }}});
 
-          
+          socket.on('send_scores',function(lastroomnames,room_id,last_client_ids,current_turn){
+            socket.emit('my_score',lastroomnames,room_id,last_client_ids,score,name);
+          })
   
           socket.on('time_update',function(time_,room_id){
             time=time_;
@@ -185,22 +189,13 @@
             
           });
   
-          socket.on('time_update',function(time_,room_id){
-            time=time_;
-            // console.log(time);
-            document.getElementById('time').innerHTML="TIME LEFT:"+time;
-              })
-        
+    
+          socket.on('final_scores',function(lastroomnames_,room_id,last_client_ids_,scores){
+
+          })
   
   
-          // socket.on('new_round',current_turn=>{
-          //   document.getElementById('round').innerHTML='show';
-          //   document.getElementById('round').innerHTML="ROUND "+round_number+"BEGIN";
-          //   round_number++;
-          //   document.getElementById('round').className='hide';
-          //   if(socket.id === current_turn) myturn=true;
-          //   else myturn=false;
-          // });
+
   
   
           socket.on('drawing option',function(word,current_turn){
